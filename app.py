@@ -4,14 +4,9 @@ from flask_cors import CORS
 import speech_recognition as sr
 from pydub import AudioSegment
 import tempfile
-import nltk
-from nltk.tokenize import sent_tokenize
 
 app = Flask(__name__)
 CORS(app)
-
-# Download necessary NLTK data
-nltk.download('punkt', quiet=True)
 
 # Store audio transcriptions
 transcriptions = []
@@ -20,23 +15,6 @@ transcriptions = []
 def index():
     return render_template('index.html', transcriptions=transcriptions)
 
-def improve_sentences(text):
-    sentences = sent_tokenize(text)
-    improved_sentences = [s.capitalize() for s in sentences]
-    return ' '.join(improved_sentences)
-
-def transcribe_with_confidence(recognizer, audio):
-    try:
-        result = recognizer.recognize_google(audio, language="en-GB", show_all=True)
-        if result and 'alternative' in result:
-            best_guess = max(result['alternative'], key=lambda alt: alt.get('confidence', 0))
-            if best_guess.get('confidence', 0) > 0.8:  # Adjust this threshold as needed
-                return best_guess['transcript']
-            else:
-                return "[uncertain] " + best_guess['transcript']
-    except sr.UnknownValueError:
-        return "[inaudible]"
-
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
     if 'audio' not in request.files:
@@ -44,8 +22,6 @@ def transcribe():
 
     audio_file = request.files['audio']
     recognizer = sr.Recognizer()
-    recognizer.energy_threshold = 300  # Adjust this value based on your audio input
-    recognizer.dynamic_energy_threshold = True
 
     try:
         # Save the uploaded file temporarily
@@ -65,10 +41,7 @@ def transcribe():
             audio = recognizer.record(source)
 
         # Perform the transcription
-        text = transcribe_with_confidence(recognizer, audio)
-
-        # Improve sentence structure
-        text = improve_sentences(text)
+        text = recognizer.recognize_google(audio)
 
         # Add to transcriptions
         transcriptions.insert(0, text)  # Add new transcription at the beginning
