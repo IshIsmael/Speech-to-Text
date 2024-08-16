@@ -9,6 +9,9 @@ pydub
 # Web server
 gunicorn
 
+nltk
+language-tool-python
+
 # Security
 python-dotenv
 

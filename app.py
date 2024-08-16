@@ -4,9 +4,18 @@ from flask_cors import CORS
 import speech_recognition as sr
 from pydub import AudioSegment
 import tempfile
+import nltk
+from nltk.tokenize import sent_tokenize
+from language_tool_python import LanguageTool
 
 app = Flask(__name__)
 CORS(app)
+
+# Download necessary NLTK data
+nltk.download('punkt', quiet=True)
+
+# Initialize LanguageTool
+tool = LanguageTool('en-GB')
 
 # Store audio transcriptions
 transcriptions = []
@@ -15,6 +24,28 @@ transcriptions = []
 def index():
     return render_template('index.html', transcriptions=transcriptions)
 
+def improve_sentences(text):
+    sentences = sent_tokenize(text)
+    improved_sentences = [s.capitalize() for s in sentences]
+    return ' '.join(improved_sentences)
+
+def correct_text(text):
+    matches = tool.check(text)
+    corrected_text = language_tool_python.utils.correct(text, matches)
+    return corrected_text
+
+def transcribe_with_confidence(recognizer, audio):
+    try:
+        result = recognizer.recognize_google(audio, language="en-GB", show_all=True)
+        if result and 'alternative' in result:
+            best_guess = max(result['alternative'], key=lambda alt: alt.get('confidence', 0))
+            if best_guess.get('confidence', 0) > 0.8:  # Adjust this threshold as needed
+                return best_guess['transcript']
+            else:
+                return "[uncertain]"
+    except sr.UnknownValueError:
+        return "[inaudible]"
+
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
     if 'audio' not in request.files:
@@ -22,6 +53,8 @@ def transcribe():
 
     audio_file = request.files['audio']
     recognizer = sr.Recognizer()
+    recognizer.energy_threshold = 300  # Adjust this value based on your audio input
+    recognizer.dynamic_energy_threshold = True
 
     try:
         # Save the uploaded file temporarily
@@ -41,7 +74,13 @@ def transcribe():
             audio = recognizer.record(source)
 
         # Perform the transcription
-        text = recognizer.recognize_google(audio)
+        text = transcribe_with_confidence(recognizer, audio)
+
+        # Improve sentence structure
+        text = improve_sentences(text)
+
+        # Apply language tool corrections
+        text = correct_text(text)
 
         # Add to transcriptions
         transcriptions.insert(0, text)  # Add new transcription at the beginning
