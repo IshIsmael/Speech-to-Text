@@ -271,7 +271,7 @@
                     <button class="btn btn-upload">
                         <i class="fas fa-upload"></i> Choose File
                     </button>
-                    <input type="file" id="audioFile" accept="audio/*" onchange="handleFileUpload()">
+                    <input type="file" id="audioFile" accept="audio/*,.mp4,.m4a" onchange="handleFileUpload()">
                 </div>
             </div>
             <div class="main-content">
@@ -359,6 +359,19 @@
         function handleFileUpload() {
             const audioFile = $('#audioFile')[0].files[0];
             if (audioFile) {
+                // Check file type and size
+                const acceptedTypes = ['audio/wav', 'audio/mpeg', 'audio/mp4', 'audio/x-m4a', 'audio/aac'];
+                if (!acceptedTypes.includes(audioFile.type)) {
+                    alert('Please select a valid audio file (WAV, MP3, M4A, or AAC).');
+                    return;
+                }
+                
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                if (audioFile.size > maxSize) {
+                    alert('File is too large. Please select a file smaller than 10MB.');
+                    return;
+                }
+        
                 const formData = new FormData();
                 formData.append('audio', audioFile);
                 transcribeAudio(formData);
