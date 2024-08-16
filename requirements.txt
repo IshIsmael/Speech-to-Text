@@ -1,0 +1,115 @@
+# Flask and related extensions
+Flask==2.1.0
+Flask-Cors==3.0.10
+
+# Audio processing
+SpeechRecognition==3.8.1
+pydub==0.25.1
+
+# Web server
+gunicorn==20.1.0
+
+# Database (if needed in the future)
+SQLAlchemy==1.4.31
+
+# Security
+python-dotenv==0.19.2
+
+# Testing
+pytest==7.1.1
+coverage==6.3.2
+
+# Development tools
+black==22.3.0
+flake8==4.0.1
+isort==5.10.1
+
+# Performance monitoring (optional)
+newrelic==7.2.4.171
+
+# Logging
+structlog==21.5.0
+
+# Error tracking (optional)
+sentry-sdk==1.5.8
+
+# API documentation (optional)
+flasgger==0.9.5
+
+# Frontend dependencies (if using a build process)
+# Note: These would typically be managed separately in a package.json file
+# nodeenv==1.6.0
+
+# Production dependencies
+Werkzeug==2.0.3
+click==8.0.4
+itsdangerous==2.1.2
+Jinja2==3.0.3
+MarkupSafe==2.1.1
+
+# Audio file handling
+ffmpeg-python==0.2.0
+
+# Asynchronous task queue (if needed for long-running tasks)
+# celery==5.2.3
+# redis==4.1.4
+
+# WebSocket support (if real-time features are added in the future)
+# Flask-SocketIO==5.1.1
+
+# File upload handling
+Flask-Uploads==0.2.1
+
+# Form handling and validation
+WTForms==3.0.1
+
+# Time zone handling
+pytz==2022.1
+
+# HTTP requests (if needed for external API calls)
+requests==2.27.1
+
+# XML parsing (if needed)
+lxml==4.8.0
+
+# JSON handling
+ujson==5.1.0
+
+# Environment variable management
+python-dotenv==0.20.0
+
+# YAML parsing (if needed for configuration)
+PyYAML==6.0
+
+# Multithreading (if needed for performance optimization)
+futures==3.0.5
+
+# Progress bar (for long-running processes in CLI)
+tqdm==4.64.0
+
+# Date parsing
+python-dateutil==2.8.2
+
+# Caching
+Flask-Caching==1.10.1
+
+# Rate limiting
+Flask-Limiter==2.4.0
+
+# Markdown support (if needed for documentation)
+Markdown==3.3.6
+
+# PDF generation (if needed for report generation)
+reportlab==3.6.9
+
+# Image processing (if needed)
+Pillow==9.1.0
+
+# Cryptography (for enhanced security features)
+cryptography==36.0.2
+
+# Internationalization and localization
+Flask-Babel==2.0.0
+
+# Profiling (for performance optimization)
+pyinstrument==4.1.1

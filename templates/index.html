@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoiceScribe - Elegant Speech-to-Text Transcription</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/2.0.5/wavesurfer.min.js"></script>
     <style>
         :root {
-            --pastel-pink: #FFD1DC;
-            --pastel-blue: #BFEAF5;
+            --pastel-pink: #FFB6C1;
+            --pastel-blue: #AEC6CF;
+            --pastel-yellow: #FDFD96;
+            --pastel-green: #B0E57C;
             --pastel-lavender: #E6E6FA;
+            --baby-blue-light: #E6F3FF;
+            --baby-blue-dark: #B8D8F5;
             --dark-text: #333333;
             --light-text: #FFFFFF;
             --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -29,7 +32,7 @@
             font-family: 'Montserrat', sans-serif;
             line-height: 1.6;
             color: var(--dark-text);
-            background-color: #f0f4f8;
+            background: linear-gradient(135deg, var(--baby-blue-light), var(--baby-blue-dark));
             min-height: 100vh;
         }
 
@@ -45,14 +48,14 @@
         }
 
         h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3rem;
+            font-family: 'Pacifico', cursive;
+            font-size: 4rem;
             color: var(--dark-text);
             text-shadow: 2px 2px var(--pastel-pink);
         }
 
         .app-container {
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: #FFFFFF;
             border-radius: 20px;
             box-shadow: var(--shadow);
             overflow: hidden;
@@ -86,7 +89,7 @@
         }
 
         .btn-record:hover {
-            background-color: #FFB6C1;
+            background-color: #FF9AA2;
         }
 
         .btn-upload {
@@ -95,7 +98,7 @@
         }
 
         .btn-upload:hover {
-            background-color: #87CEFA;
+            background-color: #8FBBD9;
         }
 
         .file-input-wrapper {
@@ -116,8 +119,7 @@
         #waveform {
             width: 100%;
             height: 128px;
-            background-color: #f0f4f8;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
         }
 
         .status-container {
@@ -151,7 +153,7 @@
 
         .result-container {
             padding: 20px;
-            background-color: #ffffff;
+            background-color: var(--pastel-yellow);
             min-height: 200px;
             border-radius: 10px;
             margin: 20px;
@@ -163,7 +165,7 @@
         }
 
         .transcription-item {
-            background-color: #ffffff;
+            background-color: var(--pastel-green);
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 20px;
@@ -193,7 +195,7 @@
             }
 
             h1 {
-                font-size: 2rem;
+                font-size: 3rem;
             }
 
             .control-panel {
@@ -231,24 +233,6 @@
                 padding: 40px;
             }
         }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--pastel-lavender);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--pastel-blue);
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--pastel-pink);
-        }
     </style>
 </head>
 <body>
@@ -269,7 +253,7 @@
                 </div>
             </div>
             <div class="main-content">
-                <div id="waveform"></div>
+                <canvas id="waveform"></canvas>
                 <div class="status-container">
                     <div id="status"></div>
                     <div class="loading">
@@ -290,18 +274,10 @@
         let recorder;
         let isRecording = false;
         let audioContext;
-        let wavesurfer;
-
-        wavesurfer = WaveSurfer.create({
-            container: '#waveform',
-            waveColor: '#FFD1DC',
-            progressColor: '#BFEAF5',
-            cursorColor: '#E6E6FA',
-            barWidth: 3,
-            barHeight: 2,
-            responsive: true,
-            barRadius: 3
-        });
+        let analyser;
+        let dataArray;
+        let canvas;
+        let canvasCtx;
 
         function toggleRecording() {
             if (!isRecording) {
@@ -315,6 +291,16 @@
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(function (stream) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    const source = audioContext.createMediaStreamSource(stream);
+                    source.connect(analyser);
+                    analyser.fftSize = 2048;
+                    const bufferLength = analyser.frequencyBinCount;
+                    dataArray = new Uint8Array(bufferLength);
+
+                    canvas = document.getElementById('waveform');
+                    canvasCtx = canvas.getContext('2d');
+                    
                     const input = audioContext.createMediaStreamSource(stream);
                     recorder = new Recorder(input, { numChannels: 1 });
                     recorder.record();
@@ -323,7 +309,7 @@
                     $('#startButton').addClass('recording');
                     $('#waveform').show();
                     $('#status').text('Recording in progress...');
-                    visualize(stream);
+                    visualize();
                 })
                 .catch(function (err) {
                     console.error('Error accessing microphone:', err);
@@ -384,22 +370,37 @@
             });
         }
 
-        function visualize(stream) {
-            const analyser = audioContext.createAnalyser();
-            const source = audioContext.createMediaStreamSource(stream);
-            source.connect(analyser);
-            analyser.fftSize = 2048;
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
+        function visualize() {
+            requestAnimationFrame(visualize);
 
-            function draw() {
-                requestAnimationFrame(draw);
-                analyser.getByteTimeDomainData(dataArray);
-                wavesurfer.empty();
-                wavesurfer.drawBuffer(0, dataArray, wavesurfer.drawer.width);
+            analyser.getByteTimeDomainData(dataArray);
+
+            canvasCtx.fillStyle = 'rgb(255, 255, 255)';
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+            canvasCtx.lineWidth = 2;
+            canvasCtx.strokeStyle = 'rgb(255, 182, 193)';
+
+            canvasCtx.beginPath();
+
+            const sliceWidth = canvas.width * 1.0 / dataArray.length;
+            let x = 0;
+
+            for (let i = 0; i < dataArray.length; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * canvas.height / 2;
+
+                if (i === 0) {
+                    canvasCtx.moveTo(x, y);
+                } else {
+                    canvasCtx.lineTo(x, y);
+                }
+
+                x += sliceWidth;
             }
 
-            draw();
+            canvasCtx.lineTo(canvas.width, canvas.height / 2);
+            canvasCtx.stroke();
         }
 
         function updatePreviousTranscriptions(newTranscription) {
@@ -443,6 +444,18 @@
         // Load previous transcriptions on page load
         $(document).ready(function() {
             displayPreviousTranscriptions();
+            canvas = document.getElementById('waveform');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            canvasCtx = canvas.getContext('2d');
+        });
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', function() {
+            if (canvas) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            }
         });
     </script>
 </body>
