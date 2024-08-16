@@ -12,11 +12,7 @@
         :root {
             --pastel-pink: #FFB6C1;
             --pastel-blue: #AEC6CF;
-            --pastel-yellow: #FDFD96;
-            --pastel-green: #B0E57C;
-            --pastel-lavender: #E6E6FA;
-            --baby-blue-light: #E6F3FF;
-            --baby-blue-dark: #B8D8F5;
+            --light-blue: #E6F3FF;
             --dark-text: #333333;
             --light-text: #FFFFFF;
             --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -32,14 +28,31 @@
             font-family: 'Montserrat', sans-serif;
             line-height: 1.6;
             color: var(--dark-text);
-            background: linear-gradient(135deg, var(--baby-blue-light), var(--baby-blue-dark));
+            background-color: #f0f4f8;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .wave-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .wave-background svg {
+            width: 100%;
+            height: 100%;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
+            position: relative;
+            z-index: 1;
         }
 
         header {
@@ -65,10 +78,10 @@
 
         .control-panel {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
             align-items: center;
             padding: 20px;
-            background-color: var(--pastel-lavender);
+            background-color: var(--light-blue);
         }
 
         .btn {
@@ -81,6 +94,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: var(--shadow);
+            margin: 0 10px;
         }
 
         .btn-record {
@@ -153,7 +167,7 @@
 
         .result-container {
             padding: 20px;
-            background-color: var(--pastel-yellow);
+            background-color: #FFFFFF;
             min-height: 200px;
             border-radius: 10px;
             margin: 20px;
@@ -165,7 +179,7 @@
         }
 
         .transcription-item {
-            background-color: var(--pastel-green);
+            background-color: #FFFFFF;
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 20px;
@@ -205,6 +219,7 @@
 
             .btn {
                 width: 100%;
+                margin: 10px 0;
             }
 
             .transcription-item {
@@ -214,28 +229,34 @@
 
         @media (min-width: 769px) {
             .app-container {
-                flex-direction: row;
+                flex-direction: column;
             }
 
             .control-panel {
-                flex-direction: column;
-                justify-content: flex-start;
-                padding: 40px;
-                width: 300px;
+                flex-direction: row;
+                justify-content: center;
+                padding: 20px;
             }
 
             .btn {
-                margin-bottom: 20px;
+                margin: 0 10px;
             }
 
             .main-content {
-                flex-grow: 1;
                 padding: 40px;
             }
         }
     </style>
 </head>
 <body>
+    <div class="wave-background">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 800" preserveAspectRatio="none">
+            <path fill="#FFD1DC" fill-opacity="0.3" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,213.3C672,224,768,224,864,213.3C960,203,1056,181,1152,181.3C1248,181,1344,203,1392,213.3L1440,224L1440,800L1392,800C1344,800,1248,800,1152,800C1056,800,960,800,864,800C768,800,672,800,576,800C480,800,384,800,288,800C192,800,96,800,48,800L0,800Z"></path>
+            <path fill="#BFEAF5" fill-opacity="0.3" d="M0,320L48,309.3C96,299,192,277,288,266.7C384,256,480,256,576,261.3C672,267,768,277,864,277.3C960,277,1056,267,1152,245.3C1248,224,1344,192,1392,176L1440,160L1440,800L1392,800C1344,800,1248,800,1152,800C1056,800,960,800,864,800C768,800,672,800,576,800C480,800,384,800,288,800C192,800,96,800,48,800L0,800Z"></path>
+            <path fill="#E6E6FA" fill-opacity="0.3" d="M0,416L48,432C96,448,192,480,288,480C384,480,480,448,576,437.3C672,427,768,437,864,458.7C960,480,1056,512,1152,517.3C1248,523,1344,501,1392,490.7L1440,480L1440,800L1392,800C1344,800,1248,800,1152,800C1056,800,960,800,864,800C768,800,672,800,576,800C480,800,384,800,288,800C192,800,96,800,48,800L0,800Z"></path>
+            <path fill="#FFE4E1" fill-opacity="0.3" d="M0,608L48,624C96,640,192,672,288,682.7C384,693,480,683,576,661.3C672,640,768,608,864,597.3C960,587,1056,597,1152,593.3C1248,589,1344,571,1392,562.7L1440,554L1440,800L1392,800C1344,800,1248,800,1152,800C1056,800,960,800,864,800C768,800,672,800,576,800C480,800,384,800,288,800C192,800,96,800,48,800L0,800Z"></path>
+        </svg>
+    </div>
     <div class="container">
         <header>
             <h1>VoiceScribe</h1>
