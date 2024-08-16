@@ -42,6 +42,7 @@
             height: 100%;
             z-index: -1;
         }
+
         .wave-background svg {
             width: 100%;
             height: 100%;
@@ -295,10 +296,7 @@
         let recorder;
         let isRecording = false;
         let audioContext;
-        let analyser;
-        let dataArray;
-        let canvas;
-        let canvasCtx;
+        let stream;
 
         function toggleRecording() {
             if (!isRecording) {
@@ -310,18 +308,9 @@
 
         function startRecording() {
             navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(function (stream) {
+                .then(function (mediaStream) {
+                    stream = mediaStream;
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    analyser = audioContext.createAnalyser();
-                    const source = audioContext.createMediaStreamSource(stream);
-                    source.connect(analyser);
-                    analyser.fftSize = 2048;
-                    const bufferLength = analyser.frequencyBinCount;
-                    dataArray = new Uint8Array(bufferLength);
-
-                    canvas = document.getElementById('waveform');
-                    canvasCtx = canvas.getContext('2d');
-                    
                     const input = audioContext.createMediaStreamSource(stream);
                     recorder = new Recorder(input, { numChannels: 1 });
                     recorder.record();
@@ -351,6 +340,19 @@
                     formData.append('audio', blob, 'recording.wav');
                     transcribeAudio(formData);
                 });
+
+                // Stop all tracks on the stream to release the microphone
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+
+                // Close the audio context
+                if (audioContext) {
+                    audioContext.close().then(() => {
+                        audioContext = null;
+                    });
+                }
             }
         }
 
@@ -392,36 +394,56 @@
         }
 
         function visualize() {
-            requestAnimationFrame(visualize);
+            if (!audioContext || !isRecording) return;
 
-            analyser.getByteTimeDomainData(dataArray);
+            const analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 2048;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
 
-            canvasCtx.fillStyle = 'rgb(255, 255, 255)';
-            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+            const canvas = document.getElementById('waveform');
+            const canvasCtx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
 
-            canvasCtx.lineWidth = 2;
-            canvasCtx.strokeStyle = 'rgb(255, 182, 193)';
+            function draw() {
+                if (!isRecording) return;
 
-            canvasCtx.beginPath();
+                requestAnimationFrame(draw);
 
-            const sliceWidth = canvas.width * 1.0 / dataArray.length;
-            let x = 0;
+                analyser.getByteTimeDomainData(dataArray);
 
-            for (let i = 0; i < dataArray.length; i++) {
-                const v = dataArray[i] / 128.0;
-                const y = v * canvas.height / 2;
+                canvasCtx.fillStyle = 'rgb(255, 255, 255)';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
 
-                if (i === 0) {
-                    canvasCtx.moveTo(x, y);
-                } else {
-                    canvasCtx.lineTo(x, y);
+                canvasCtx.lineWidth = 2;
+                canvasCtx.strokeStyle = 'rgb(255, 182, 193)';
+
+                canvasCtx.beginPath();
+
+                const sliceWidth = canvas.width * 1.0 / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * canvas.height / 2;
+
+                    if (i === 0) {
+                        canvasCtx.moveTo(x, y);
+                    } else {
+                        canvasCtx.lineTo(x, y);
+                    }
+
+                    x += sliceWidth;
                 }
 
-                x += sliceWidth;
+                canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                canvasCtx.stroke();
             }
 
-            canvasCtx.lineTo(canvas.width, canvas.height / 2);
-            canvasCtx.stroke();
+            draw();
         }
 
         function updatePreviousTranscriptions(newTranscription) {
@@ -465,14 +487,11 @@
         // Load previous transcriptions on page load
         $(document).ready(function() {
             displayPreviousTranscriptions();
-            canvas = document.getElementById('waveform');
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            canvasCtx = canvas.getContext('2d');
         });
 
         // Resize canvas on window resize
         window.addEventListener('resize', function() {
+            const canvas = document.getElementById('waveform');
             if (canvas) {
                 canvas.width = canvas.offsetWidth;
                 canvas.height = canvas.offsetHeight;
