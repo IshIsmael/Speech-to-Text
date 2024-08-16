@@ -9,6 +9,8 @@ pydub
 # Web server
 gunicorn
 
+#4
+crypotgraphy
 
 # Security
 python-dotenv
