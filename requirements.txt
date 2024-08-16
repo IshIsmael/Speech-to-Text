@@ -9,9 +9,6 @@ pydub
 # Web server
 gunicorn
 
-#4
-crypotgraphy
-
 # Security
 python-dotenv
 
@@ -70,3 +67,5 @@ Flask-Caching==1.10.1
 
 # Rate limiting
 Flask-Limiter==2.4.0
+
+cryptography
