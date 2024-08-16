@@ -10,7 +10,6 @@ pydub
 gunicorn
 
 nltk
-language-tool-python
 
 # Security
 python-dotenv

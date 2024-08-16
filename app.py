@@ -6,16 +6,12 @@ from pydub import AudioSegment
 import tempfile
 import nltk
 from nltk.tokenize import sent_tokenize
-from language_tool_python import LanguageTool
 
 app = Flask(__name__)
 CORS(app)
 
 # Download necessary NLTK data
 nltk.download('punkt', quiet=True)
-
-# Initialize LanguageTool
-tool = LanguageTool('en-GB')
 
 # Store audio transcriptions
 transcriptions = []
@@ -29,11 +25,6 @@ def improve_sentences(text):
     improved_sentences = [s.capitalize() for s in sentences]
     return ' '.join(improved_sentences)
 
-def correct_text(text):
-    matches = tool.check(text)
-    corrected_text = language_tool_python.utils.correct(text, matches)
-    return corrected_text
-
 def transcribe_with_confidence(recognizer, audio):
     try:
         result = recognizer.recognize_google(audio, language="en-GB", show_all=True)
@@ -42,7 +33,7 @@ def transcribe_with_confidence(recognizer, audio):
             if best_guess.get('confidence', 0) > 0.8:  # Adjust this threshold as needed
                 return best_guess['transcript']
             else:
-                return "[uncertain]"
+                return "[uncertain] " + best_guess['transcript']
     except sr.UnknownValueError:
         return "[inaudible]"
 
@@ -78,9 +69,6 @@ def transcribe():
 
         # Improve sentence structure
         text = improve_sentences(text)
-
-        # Apply language tool corrections
-        text = correct_text(text)
 
         # Add to transcriptions
         transcriptions.insert(0, text)  # Add new transcription at the beginning
