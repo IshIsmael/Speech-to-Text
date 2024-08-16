@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceScribe - Elegant Speech-to-Text Transcription</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/2.0.5/wavesurfer.min.js"></script>
+    <style>
+        :root {
+            --pastel-pink: #FFD1DC;
+            --pastel-blue: #BFEAF5;
+            --pastel-lavender: #E6E6FA;
+            --dark-text: #333333;
+            --light-text: #FFFFFF;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background-color: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: var(--dark-text);
+            text-shadow: 2px 2px var(--pastel-pink);
+        }
+
+        .app-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 20px;
+            background-color: var(--pastel-lavender);
+        }
+
+        .btn {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-record {
+            background-color: var(--pastel-pink);
+            color: var(--dark-text);
+        }
+
+        .btn-record:hover {
+            background-color: #FFB6C1;
+        }
+
+        .btn-upload {
+            background-color: var(--pastel-blue);
+            color: var(--dark-text);
+        }
+
+        .btn-upload:hover {
+            background-color: #87CEFA;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        #waveform {
+            width: 100%;
+            height: 128px;
+            background-color: #f0f4f8;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-container {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark-text);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            border: 4px solid var(--pastel-blue);
+            border-top: 4px solid var(--pastel-pink);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            padding: 20px;
+            background-color: #ffffff;
+            min-height: 200px;
+            border-radius: 10px;
+            margin: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .transcription-list {
+            margin-top: 40px;
+        }
+
+        .transcription-item {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .transcription-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .transcription-item a {
+            color: var(--dark-text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .transcription-item a:hover {
+            color: var(--pastel-blue);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .control-panel {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .transcription-item {
+                padding: 15px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .app-container {
+                flex-direction: row;
+            }
+
+            .control-panel {
+                flex-direction: column;
+                justify-content: flex-start;
+                padding: 40px;
+                width: 300px;
+            }
+
+            .btn {
+                margin-bottom: 20px;
+            }
+
+            .main-content {
+                flex-grow: 1;
+                padding: 40px;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--pastel-lavender);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--pastel-blue);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--pastel-pink);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>VoiceScribe</h1>
+        </header>
+        <div class="app-container">
+            <div class="control-panel">
+                <button id="startButton" class="btn btn-record" onclick="toggleRecording()">
+                    <i class="fas fa-microphone"></i> Start Recording
+                </button>
+                <div class="file-input-wrapper">
+                    <button class="btn btn-upload">
+                        <i class="fas fa-upload"></i> Choose File
+                    </button>
+                    <input type="file" id="audioFile" accept="audio/*" onchange="handleFileUpload()">
+                </div>
+            </div>
+            <div class="main-content">
+                <div id="waveform"></div>
+                <div class="status-container">
+                    <div id="status"></div>
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Transcribing...</p>
+                    </div>
+                </div>
+                <div class="result-container" id="result"></div>
+            </div>
+        </div>
+        <div class="transcription-list">
+            <h2>Previous Transcriptions</h2>
+            <div id="previousTranscriptions"></div>
+        </div>
+    </div>
+
+    <script>
+        let recorder;
+        let isRecording = false;
+        let audioContext;
+        let wavesurfer;
+
+        wavesurfer = WaveSurfer.create({
+            container: '#waveform',
+            waveColor: '#FFD1DC',
+            progressColor: '#BFEAF5',
+            cursorColor: '#E6E6FA',
+            barWidth: 3,
+            barHeight: 2,
+            responsive: true,
+            barRadius: 3
+        });
+
+        function toggleRecording() {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function (stream) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const input = audioContext.createMediaStreamSource(stream);
+                    recorder = new Recorder(input, { numChannels: 1 });
+                    recorder.record();
+                    isRecording = true;
+                    $('#startButton').html('<i class="fas fa-stop"></i> Stop Recording');
+                    $('#startButton').addClass('recording');
+                    $('#waveform').show();
+                    $('#status').text('Recording in progress...');
+                    visualize(stream);
+                })
+                .catch(function (err) {
+                    console.error('Error accessing microphone:', err);
+                    $('#status').text('Error: ' + err.message);
+                });
+        }
+
+        function stopRecording() {
+            if (recorder && isRecording) {
+                recorder.stop();
+                isRecording = false;
+                $('#startButton').html('<i class="fas fa-microphone"></i> Start Recording');
+                $('#startButton').removeClass('recording');
+                $('#status').text('Processing audio...');
+
+                recorder.exportWAV(function(blob) {
+                    const formData = new FormData();
+                    formData.append('audio', blob, 'recording.wav');
+                    transcribeAudio(formData);
+                });
+            }
+        }
+
+        function handleFileUpload() {
+            const audioFile = $('#audioFile')[0].files[0];
+            if (audioFile) {
+                const formData = new FormData();
+                formData.append('audio', audioFile);
+                transcribeAudio(formData);
+            }
+        }
+
+        function transcribeAudio(formData) {
+            $('.loading').show();
+            $('#status').text('Transcribing audio...');
+            $.ajax({
+                url: '/transcribe',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    $('#result').html('<h3>Latest Transcription:</h3><p>' + response.text + '</p>');
+                    $('#status').text('Transcription complete!');
+                    $('.loading').hide();
+                    updatePreviousTranscriptions(response.text);
+                },
+                error: function (xhr, status, error) {
+                    let errorMessage = 'Unknown error';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    }
+                    $('#result').html('<h3>Error:</h3><p>' + errorMessage + '</p>');
+                    $('#status').text('Transcription failed.');
+                    $('.loading').hide();
+                    console.error('Full error:', xhr.responseText);
+                }
+            });
+        }
+
+        function visualize(stream) {
+            const analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 2048;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                requestAnimationFrame(draw);
+                analyser.getByteTimeDomainData(dataArray);
+                wavesurfer.empty();
+                wavesurfer.drawBuffer(0, dataArray, wavesurfer.drawer.width);
+            }
+
+            draw();
+        }
+
+        function updatePreviousTranscriptions(newTranscription) {
+            let transcriptions = JSON.parse(localStorage.getItem('transcriptions')) || [];
+            transcriptions.unshift(newTranscription);
+            localStorage.setItem('transcriptions', JSON.stringify(transcriptions));
+
+            displayPreviousTranscriptions();
+        }
+
+        function displayPreviousTranscriptions() {
+            let transcriptions = JSON.parse(localStorage.getItem('transcriptions')) || [];
+            let transcriptionsHtml = '';
+
+            transcriptions.forEach((transcription, index) => {
+                transcriptionsHtml += `
+                    <div class="transcription-item">
+                        <p>${transcription}</p>
+                        <a href="#" onclick="downloadTranscription(${index})">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                `;
+            });
+
+            $('#previousTranscriptions').html(transcriptionsHtml);
+        }
+
+        function downloadTranscription(index) {
+            let transcriptions = JSON.parse(localStorage.getItem('transcriptions')) || [];
+            if (index >= 0 && index < transcriptions.length) {
+                let text = transcriptions[index];
+                let blob = new Blob([text], { type: 'text/plain' });
+                let link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'transcription.txt';
+                link.click();
+            }
+        }
+
+        // Load previous transcriptions on page load
+        $(document).ready(function() {
+            displayPreviousTranscriptions();
+        });
+    </script>
+</body>
+</html>
