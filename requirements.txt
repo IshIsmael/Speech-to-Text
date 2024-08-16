@@ -75,9 +75,6 @@ lxml==4.8.0
 # JSON handling
 ujson==5.1.0
 
-# Environment variable management
-python-dotenv==0.20.0
-
 # YAML parsing (if needed for configuration)
 PyYAML==6.0
 
